@@ -1,0 +1,55 @@
+/**
+ * ============================================================================
+ * BEAKSQUAD THEME — CORE (Akins Navy / Gold) (kiosk/themes/core.css)
+ * ============================================================================
+ *
+ * Design System Rules (§7):
+ *   - Theme files override ONLY CSS custom properties (colors and font stacks).
+ *   - Core palette: Akins Navy (#1e3a8a), Akins Gold (#eab308), and tactile
+ *     slate/charcoal surfaces with >= 7:1 text contrast on every card.
+ *   - Uses the same font roles as Vaporwave, with `--font-display: "Orbitron"`.
+ */
+
+:root {
+  /* Raw palette (Akins High School Navy & Gold + Slate/Charcoal) */
+  --akins-navy: #1e3a8a;
+  --akins-Gold: #eab308;
+  --charcoal-deep: #0b132b;
+  --slate-surface: #1e293b;
+  --slate-elevated: #0f172a;
+  --slate-light: #f8fafc;
+  --gold-tint: #fef08a;
+  --core-open: #4ade80;
+  --core-closed: #fda4af;
+
+  /* Semantic tokens: components use ONLY these */
+  --page-bg: var(--charcoal-deep);
+  --header-bg: linear-gradient(135deg, var(--charcoal-deep), var(--akins-navy));
+  --page-grid: color-mix(in srgb, var(--akins-Gold) 12%, transparent);
+  --text-on-dark: var(--slate-light);
+
+  --hero-bg: var(--slate-surface);
+  --hero-border: var(--akins-Gold);
+  --hero-text: var(--slate-light);
+
+  --card-a-bg: var(--slate-surface);
+  --card-a-border: #60a5fa;
+  --card-a-text: var(--slate-light);
+
+  --card-b-bg: var(--slate-elevated);
+  --card-b-border: var(--akins-Gold);
+  --card-b-text: var(--gold-tint);
+
+  --status-open: var(--core-open);
+  --status-closed: var(--core-closed);
+  --accent-brand: var(--akins-Gold);
+
+  --banner-text: #0b132b;
+  --qr-bg: #ffffff;
+  --qr-fg: #000000;
+
+  --font-display: "Orbitron";        /* status word + room number ONLY */
+  --font-digits:  "VT323";           /* clock, times, countdown */
+  --font-body:    "Space Grotesk";   /* sentences */
+  --font-code:    "Share Tech Mono"; /* code snippets */
+}

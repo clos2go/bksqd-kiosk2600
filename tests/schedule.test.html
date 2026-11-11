@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BeakSquad Schedule Unit Tests</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --pass: #4ade80;
+      --fail: #f87171;
+      --accent: #eab308;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      max-width: 1080px;
+      margin: 0 auto 1.5rem auto;
+      padding: 1.25rem 1.5rem;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    .summary-badge {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+    }
+    .summary-pass {
+      background: rgba(74, 222, 128, 0.15);
+      color: var(--pass);
+      border: 1px solid var(--pass);
+    }
+    .summary-fail {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--fail);
+      border: 1px solid var(--fail);
+    }
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      gap: 0.75rem;
+    }
+    .test-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .test-row.pass { border-left-color: var(--pass); }
+    .test-row.fail { border-left-color: var(--fail); }
+    .test-name { font-weight: 600; }
+    .test-detail {
+      margin-top: 0.25rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+    .status-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .pass .status-pill { color: var(--pass); background: rgba(74, 222, 128, 0.12); }
+    .fail .status-pill { color: var(--fail); background: rgba(248, 113, 113, 0.12); }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>BeakSquad Schedule Engine — Unit Test Suite</h1>
+      <div style="color: var(--muted); font-size: 0.9rem;">
+        Tests <code>kiosk/config.js</code> + <code>kiosk/schedule.js</code> across all 1,440 minutes of A Day &amp; B Day, weekends, closures, and stale cache.
+      </div>
+    </div>
+    <div id="summary" class="summary-badge">Running...</div>
+  </header>
+
+  <main id="results"></main>
+
+  <!-- Load production config and pure schedule logic -->
+  <script src="../kiosk/config.js"></script>
+  <script src="../kiosk/schedule.js"></script>
+
+  <script>
+    /**
+     * ========================================================================
+     * TEST RUNNER FOR schedule.js
+     * ========================================================================
+     * Students: Open this file directly in Chrome/Firefox to verify that any
+     * changes you make to `config.js` or `schedule.js` don't break the bell
+     * schedule rules!
+     */
+    (function () {
+      "use strict";
+
+      var resultsEl = document.getElementById("results");
+      var summaryEl = document.getElementById("summary");
+      var passedCount = 0;
+      var failedCount = 0;
+      var CONFIG = window.BEAKSQUAD_CONFIG;
+
+      function assert(condition, message) {
+        if (!condition) {
+          throw new Error(message || "Assertion failed");
+        }
+      }
+
+      function assertEqual(actual, expected, label) {
+        var a = JSON.stringify(actual);
+        var e = JSON.stringify(expected);
+        if (a !== e) {
+          throw new Error((label ? label + ": " : "") + "Expected " + e + ", but got " + a);
+        }
+      }
+
+      function test(name, fn) {
+        var row = document.createElement("div");
+        row.className = "test-row";
+        try {
+          var detail = fn();
+          passedCount++;
+          row.classList.add("pass");
+          row.innerHTML =
+            '<div><div class="test-name">' + escapeHtml(name) + "</div>" +
+            (detail ? '<div class="test-detail">' + escapeHtml(detail) + "</div>" : "") +
+            '</div><span class="status-pill">PASS</span>';
+        } catch (err) {
+          failedCount++;
+          row.classList.add("fail");
+          row.innerHTML =
+            '<div><div class="test-name">' + escapeHtml(name) + "</div>" +
+            '<div class="test-detail">' + escapeHtml(err && err.message ? err.message : String(err)) + "</div>" +
+            '</div><span class="status-pill">FAIL</span>';
+          console.error("FAIL:", name, err);
+        }
+        resultsEl.appendChild(row);
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function pad2(n) {
+        return n < 10 ? "0" + n : String(n);
+      }
+
+      function toMin(hhmm) {
+        var p = hhmm.split(":");
+        return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+      }
+
+      /**
+       * Sweeps all 1,440 minutes (00:00 to 23:59) of a given date string and dayType
+       * by calling getStatus() at every single minute, then groups contiguous OPEN
+       * intervals into "H:MM–H:MM" strings.
+       */
+      function collectOpenWindowsByMinuteSweep(dateStr, dayType) {
+        var windows = [];
+        var startMin = null;
+        var apiData = { date: dateStr, dayType: dayType, closedAllDay: false };
+
+        for (var m = 0; m < 1440; m++) {
+          var hh = pad2(Math.floor(m / 60));
+          var mm = pad2(m % 60);
+          var iso = dateStr + "T" + hh + ":" + mm;
+          var st = window.getStatus(iso, dayType, apiData, CONFIG);
+          if (st.open) {
+            if (startMin === null) startMin = m;
+          } else if (startMin !== null) {
+            windows.push(
+              window.BeakSquadSchedule.formatMinutes12Short(startMin) +
+              "–" +
+              window.BeakSquadSchedule.formatMinutes12Short(m)
+            );
+            startMin = null;
+          }
+        }
+        if (startMin !== null) {
+          windows.push(
+            window.BeakSquadSchedule.formatMinutes12Short(startMin) +
+            "–" +
+            window.BeakSquadSchedule.formatMinutes12Short(1440)
+          );
+        }
+        return windows;
+      }
+
+      // ----------------------------------------------------------------------
+      // 1. Expected Open Windows — A Day & B Day
+      // ----------------------------------------------------------------------
+      test("A Day open windows match exact specification: 9:05–10:20, 10:40–11:10, 11:45–12:45, 1:30–2:45, 3:05–4:20", function () {
+        var expected = [
+          "9:05–10:20",
+          "10:40–11:10",
+          "11:45–12:45",
+          "1:30–2:45",
+          "3:05–4:20"
+        ];
+        // 1. Verify minute-by-minute sweep across all 1,440 minutes of Thu 2026-11-12
+        var swept = collectOpenWindowsByMinuteSweep("2026-11-12", "A");
+        assertEqual(swept, expected, "1440-minute sweep on A Day");
+
+        // 2. Verify todaysWindows returned by getStatus()
+        var status = window.getStatus("2026-11-12T09:15", "A", { date: "2026-11-12" }, CONFIG);
+        var labels = status.todaysWindows.map(function (w) { return w.label; });
+        assertEqual(labels, expected, "todaysWindows labels on A Day");
+        return "Verified both 1,440-minute sweep and todaysWindows: " + labels.join(", ");
+      });
+
+      test("B Day open windows match exact specification: 9:05–10:20, 10:40–11:10, 1:30–2:45, 3:05–4:20", function () {
+        var expected = [
+          "9:05–10:20",
+          "10:40–11:10",
+          "1:30–2:45",
+          "3:05–4:20"
+        ];
+        // 1. Verify minute-by-minute sweep across all 1,440 minutes of Fri 2026-11-13
+        var swept = collectOpenWindowsByMinuteSweep("2026-11-13", "B");
+        assertEqual(swept, expected, "1440-minute sweep on B Day");
+
+        // 2. Verify todaysWindows returned by getStatus()
+        var status = window.getStatus("2026-11-13T09:15", "B", { date: "2026-11-13" }, CONFIG);
+        var labels = status.todaysWindows.map(function (w) { return w.label; });
+        assertEqual(labels, expected, "todaysWindows labels on B Day");
+        return "Verified both 1,440-minute sweep and todaysWindows: " + labels.join(", ");
+      });
+
+      // ----------------------------------------------------------------------
+      // 2. Every Closed Minute on A Day Shows the Exact Expected Reason
+      // ----------------------------------------------------------------------
+      test("A Day: every single closed minute (00:00–23:59) shows the exact expected reason", function () {
+        var dateStr = "2026-11-12"; // Thursday
+        var apiData = { date: dateStr, dayType: "A", closedAllDay: false };
+
+        function expectedADayReasonAt(m) {
+          if (m < toMin("09:05")) return { open: false, title: "Before School" };
+          if (m >= toMin("09:05") && m < toMin("10:20")) return { open: true, title: "1st Period" };
+          if (m >= toMin("10:20") && m < toMin("10:40")) return { open: false, title: "Shift Change" };
+          if (m >= toMin("10:40") && m < toMin("11:10")) return { open: true, title: "Eagle Time" };
+          if (m >= toMin("11:10") && m < toMin("11:45")) return { open: false, title: "A Lunch" };
+          if (m >= toMin("11:45") && m < toMin("12:45")) return { open: true, title: "2nd Period" };
+          if (m >= toMin("12:45") && m < toMin("12:50")) return { open: false, title: "Shift Change" };
+          if (m >= toMin("12:50") && m < toMin("13:25")) return { open: false, title: "B Lunch" };
+          if (m >= toMin("13:25") && m < toMin("13:30")) return { open: false, title: "Shift Change" };
+          if (m >= toMin("13:30") && m < toMin("14:45")) return { open: true, title: "3rd Period" };
+          if (m >= toMin("14:45") && m < toMin("15:05")) return { open: false, title: "Shift Change" };
+          if (m >= toMin("15:05") && m < toMin("16:20")) return { open: true, title: "4th Period" };
+          return { open: false, title: "After School" };
+        }
+
+        for (var m = 0; m < 1440; m++) {
+          var clock = pad2(Math.floor(m / 60)) + ":" + pad2(m % 60);
+          var st = window.getStatus(dateStr + "T" + clock, "A", apiData, CONFIG);
+          var exp = expectedADayReasonAt(m);
+          assertEqual(
+            { open: st.open, title: st.title },
+            exp,
+            "A Day at " + clock
+          );
+        }
+        return "Checked all 1,440 minutes of A Day (Before School, Shift Change, A Lunch, 12:45–12:50 Shift Change, 12:50–1:25 B Lunch, After School).";
+      });
+
+      // ----------------------------------------------------------------------
+      // 3. Every Closed Minute on B Day Shows the Exact Expected Reason
+      // ----------------------------------------------------------------------
+      test("B Day: every single closed minute (00:00–23:59) shows the exact expected reason (including 11:10–11:45 A Lunch & 11:45–12:50 6th Period)", function () {
+        var dateStr = "2026-11-13"; // Friday
+        var apiData = { date: dateStr, dayType: "B", closedAllDay: false };
+
+        function expectedBDayReasonAt(m) {
+          if (m < toMin("09:05")) return { open: false, title: "Before School" };
+          if (m >= toMin("09:05") && m < toMin("10:20")) return { open: true, title: "5th Period" };
+          if (m >= toMin("10:20") && m < toMin("10:40")) return { open: false, title: "Shift Change" };
+          if (m >= toMin("10:40") && m < toMin("11:10")) return { open: true, title: "Eagle Time" };
+          if (m >= toMin("11:10") && m < toMin("11:45")) return { open: false, title: "A Lunch" };
+          if (m >= toMin("11:45") && m < toMin("12:50")) return { open: false, title: "6th Period" };
+          if (m >= toMin("12:50") && m < toMin("13:25")) return { open: false, title: "B Lunch" };
+          if (m >= toMin("13:25") && m < toMin("13:30")) return { open: false, title: "Shift Change" };
+          if (m >= toMin("13:30") && m < toMin("14:45")) return { open: true, title: "7th Period" };
+          if (m >= toMin("14:45") && m < toMin("15:05")) return { open: false, title: "Shift Change" };
+          if (m >= toMin("15:05") && m < toMin("16:20")) return { open: true, title: "8th Period" };
+          return { open: false, title: "After School" };
+        }
+
+        for (var m = 0; m < 1440; m++) {
+          var clock = pad2(Math.floor(m / 60)) + ":" + pad2(m % 60);
+          var st = window.getStatus(dateStr + "T" + clock, "B", apiData, CONFIG);
+          var exp = expectedBDayReasonAt(m);
+          assertEqual(
+            { open: st.open, title: st.title },
+            exp,
+            "B Day at " + clock
+          );
+        }
+        return "Checked all 1,440 minutes of B Day (including array-order priority of A Lunch 11:10–11:45 over 6th Period 11:45–12:50).";
+      });
+
+      // ----------------------------------------------------------------------
+      // 4. Specific Edge Cases from Specification
+      // ----------------------------------------------------------------------
+      test("A Day 12:45–12:50 shows 'Shift Change' (5-min TRANSITION_OVERRIDES at 12:50) and 12:50–1:25 shows 'B Lunch'", function () {
+        var s1244 = window.getStatus("2026-11-12T12:44", "A", { date: "2026-11-12" }, CONFIG);
+        var s1245 = window.getStatus("2026-11-12T12:45", "A", { date: "2026-11-12" }, CONFIG);
+        var s1249 = window.getStatus("2026-11-12T12:49", "A", { date: "2026-11-12" }, CONFIG);
+        var s1250 = window.getStatus("2026-11-12T12:50", "A", { date: "2026-11-12" }, CONFIG);
+        var s1324 = window.getStatus("2026-11-12T13:24", "A", { date: "2026-11-12" }, CONFIG);
+        var s1325 = window.getStatus("2026-11-12T13:25", "A", { date: "2026-11-12" }, CONFIG);
+
+        assertEqual(s1244.open, true, "12:44 should be Open");
+        assertEqual(s1245.open, false, "12:45 should be Closed");
+        assertEqual(s1245.title, "Shift Change", "12:45 title");
+        assertEqual(s1249.title, "Shift Change", "12:49 title");
+        assertEqual(s1250.title, "B Lunch", "12:50 title");
+        assertEqual(s1250.message, "Out to lunch. Literally.", "12:50 message");
+        assertEqual(s1324.title, "B Lunch", "13:24 title");
+        assertEqual(s1325.title, "Shift Change", "13:25 title");
+        return "12:44 Open -> 12:45–12:49 Shift Change -> 12:50–13:24 B Lunch -> 13:25–13:29 Shift Change";
+      });
+
+      test("Eagle Time (noBuffer: true) stays open for its entire 10:40–11:10 duration and blocks Period 2's 11:15 buffer from cutting into 11:00–11:10", function () {
+        var s1039 = window.getStatus("2026-11-12T10:39", "A", { date: "2026-11-12" }, CONFIG);
+        var s1040 = window.getStatus("2026-11-12T10:40", "A", { date: "2026-11-12" }, CONFIG);
+        var s1105 = window.getStatus("2026-11-12T11:05", "A", { date: "2026-11-12" }, CONFIG);
+        var s1109 = window.getStatus("2026-11-12T11:09", "A", { date: "2026-11-12" }, CONFIG);
+        var s1110 = window.getStatus("2026-11-12T11:10", "A", { date: "2026-11-12" }, CONFIG);
+
+        assertEqual(s1039.open, false, "10:39 is gap before Eagle Time");
+        assertEqual(s1039.title, "Shift Change", "10:39 title");
+        assertEqual(s1040.open, true, "10:40 Eagle Time starts immediately");
+        assertEqual(s1105.open, true, "11:05 stays open (not cut by 11:15 Period 2 buffer)");
+        assertEqual(s1109.open, true, "11:09 stays open (not cut by 11:10 A Lunch buffer)");
+        assertEqual(s1110.open, false, "11:10 closes for A Lunch");
+        assertEqual(s1110.title, "A Lunch", "11:10 title");
+        return "Eagle Time open 10:40 through 11:09 inclusive.";
+      });
+
+      test("Rule 1: Any Saturday or Sunday returns 'Weekend' (even during school hours with dayType='A')", function () {
+        // 2026-11-14 is Saturday, 2026-11-15 is Sunday
+        var sat = window.getStatus("2026-11-14T10:00", "A", { date: "2026-11-14" }, CONFIG);
+        var sun = window.getStatus("2026-11-15T14:00", "B", { date: "2026-11-15" }, CONFIG);
+
+        assertEqual(sat.open, false, "Saturday open");
+        assertEqual(sat.title, "Weekend", "Saturday title");
+        assertEqual(sat.message, "Even techs need to recharge. See you Monday.", "Saturday message");
+        assertEqual(sat.todaysWindows, [], "Saturday windows empty");
+
+        assertEqual(sun.open, false, "Sunday open");
+        assertEqual(sun.title, "Weekend", "Sunday title");
+        return "Saturday & Sunday both return Weekend with empty todaysWindows.";
+      });
+
+      test("Rule 2: closedAllDay returns the API's closedReason or Custom_Closed_Message", function () {
+        var holiday = window.getStatus(
+          "2026-11-12T10:00",
+          "A",
+          {
+            date: "2026-11-12",
+            closedAllDay: true,
+            closedReason: "Staff Development Day",
+            customMessage: "Techs are in training today."
+          },
+          CONFIG
+        );
+        assertEqual(holiday.open, false, "closedAllDay should be closed");
+        assertEqual(holiday.title, "Staff Development Day", "closedReason used as title");
+        assertEqual(holiday.message, "Techs are in training today.", "customMessage used as message");
+        assertEqual(holiday.todaysWindows, [], "closedAllDay has no open windows");
+        return "closedAllDay overrides bell schedule with API reason.";
+      });
+
+      test("Rule 3a: Weekday with dayType: null or undefined returns 'No Classes'", function () {
+        var nullDay = window.getStatus("2026-11-12T09:30", null, { date: "2026-11-12", dayType: null }, CONFIG);
+        var undefDay = window.getStatus("2026-11-12T09:30", undefined, { date: "2026-11-12" }, CONFIG);
+
+        assertEqual(nullDay.open, false, "null dayType open");
+        assertEqual(nullDay.title, "No Classes", "null dayType title");
+        assertEqual(nullDay.message, "No school today. Enjoy it.", "null dayType message");
+        assertEqual(undefDay.open, false, "undefined dayType open");
+        assertEqual(undefDay.title, "No Classes", "undefined dayType title");
+        return "Both null and undefined dayType safely fail closed with 'No Classes'.";
+      });
+
+      test("Rule 3b: Cached data from yesterday returns 'No Classes' (never claims Open on stale data)", function () {
+        var stale = window.getStatus(
+          "2026-11-12T09:30",
+          "A",
+          { date: "2026-11-11", dayType: "A", closedAllDay: false },
+          CONFIG
+        );
+        assertEqual(stale.open, false, "Stale cache should be Closed");
+        assertEqual(stale.title, "No Classes", "Stale cache title");
+        assertEqual(stale.todaysWindows, [], "Stale cache windows empty");
+        return "Stale apiData.date ('2026-11-11' vs today '2026-11-12') returns 'No Classes'.";
+      });
+
+      test("Return shape & countdown calculation: { open, title, message, nextChangeAt, todaysWindows }", function () {
+        // At 1:07 PM (13:07) on A Day, shop is closed for B Lunch and opens at 1:30 PM (in 23 min)
+        var closedSt = window.getStatus("2026-11-12T13:07", "A", { date: "2026-11-12" }, CONFIG);
+        assertEqual(closedSt.open, false, "1:07 PM is Closed");
+        assertEqual(closedSt.title, "B Lunch", "1:07 PM title");
+        assert(closedSt.nextChangeAt instanceof Date, "nextChangeAt is a Date instance");
+        assertEqual(closedSt.nextChangeAt.time12, "1:30 PM", "nextChangeAt.time12");
+        assertEqual(closedSt.nextChangeAt.minutesFromNow, 23, "nextChangeAt.minutesFromNow");
+        assertEqual(closedSt.countdownText, "Opens at 1:30 PM · in 23 min", "countdownText when closed");
+
+        // At 10:08 AM on A Day, shop is open and closes at 10:20 AM (in 12 min)
+        var openSt = window.getStatus("2026-11-12T10:08", "A", { date: "2026-11-12" }, CONFIG);
+        assertEqual(openSt.open, true, "10:08 AM is Open");
+        assertEqual(openSt.nextChangeAt.minutesFromNow, 12, "Closes in 12 min");
+        assertEqual(openSt.countdownText, "Closes in 12 min", "countdownText when open");
+        return "Verified countdowns: '" + closedSt.countdownText + "' and '" + openSt.countdownText + "'.";
+      });
+
+      test("America/Chicago Intl conversion works for UTC Date objects regardless of system timezone", function () {
+        // 2026-11-12 is in CST (UTC-6). 15:05:00Z == 09:05:00 America/Chicago (1st Period start)
+        var utcDate = new Date("2026-11-12T15:05:00.000Z");
+        var st = window.getStatus(utcDate, "A", { date: "2026-11-12" }, CONFIG);
+        assertEqual(st.open, true, "15:05 UTC should be 09:05 CST (Open)");
+        assertEqual(st.title, "1st Period", "15:05 UTC title");
+        return "new Date('2026-11-12T15:05:00.000Z') correctly evaluated as 09:05 America/Chicago.";
+      });
+
+      // Update summary header
+      if (failedCount === 0) {
+        summaryEl.className = "summary-badge summary-pass";
+        summaryEl.textContent = "ALL " + passedCount + " TESTS PASSED";
+      } else {
+        summaryEl.className = "summary-badge summary-fail";
+        summaryEl.textContent = failedCount + " FAILED / " + (passedCount + failedCount) + " TOTAL";
+      }
+    })();
+  </script>
+</body>
+</html>

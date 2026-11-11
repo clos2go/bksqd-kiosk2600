@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="vaporwave">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BeakSquad Hallway Signage</title>
+
+  <!--
+    ==========================================================================
+    BEAKSQUAD HALLWAY SIGNAGE — ENTRY POINT (kiosk/index.html)
+    ==========================================================================
+    One HTML file powers both hallway screens!
+    A URL parameter picks which screen to render:
+      - index.html?display=info   -> Info Board (room number, class info, slides, QR)
+      - index.html?display=status -> Status Board (OPEN/CLOSED, reason, today's hours)
+
+    Optional testing overrides (work on both displays):
+      - ?now=2026-11-12T11:20&day=B
+      - ?theme=core
+  -->
+
+  <!-- Layout rules only (no raw hex values; every color/font is a CSS variable) -->
+  <link rel="stylesheet" href="styles/base.css" />
+
+  <!-- Active theme stylesheet (swapped dynamically by app.js based on Sheet settings) -->
+  <link id="theme-stylesheet" rel="stylesheet" href="themes/vaporwave.css" />
+</head>
+<body>
+  <!--
+    Full-width offline / stale-data warning banner (§5):
+    Shown when the last good fetch is older than OFFLINE_WARNING_MINUTES (240 min)
+    or when the cached API date is not today.
+    Styled in --status-closed with dark text so it is impossible to miss.
+  -->
+  <div id="offline-banner" class="offline-banner" role="alert" hidden>
+    OFFLINE — TIMES MAY BE INACCURATE
+  </div>
+
+  <!-- Main Kiosk Viewport (shifts 1–2px every 10 min to prevent monitor image retention) -->
+  <div id="kiosk-root" class="kiosk-root">
+    <!-- Subtle retro perspective floor grid on the bottom 30% of the page -->
+    <div class="retro-floor-grid" aria-hidden="true"></div>
+
+    <!-- Active display module (status.js or info.js) mounts here -->
+    <main id="display-mount" class="display-mount"></main>
+
+    <!-- Subtle bottom-right diagnostic dots (offline fetch dot & Pi clock-drift dot) -->
+    <div class="diagnostic-dots" aria-hidden="true">
+      <span id="offline-dot" class="diag-dot diag-dot-offline" title="Offline — using cached data" hidden></span>
+      <span id="drift-dot" class="diag-dot diag-dot-drift" title="Pi clock drift corrected via serverTime" hidden></span>
+    </div>
+  </div>
+
+  <!-- Plain JS modules (no bundler, no npm, no build step) -->
+  <script src="config.js"></script>
+  <script src="schedule.js"></script>
+  <script src="displays/status.js"></script>
+  <script src="displays/info.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

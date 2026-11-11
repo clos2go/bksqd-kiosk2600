@@ -1,0 +1,58 @@
+/**
+ * ============================================================================
+ * BEAKSQUAD THEME — VAPORWAVE (Default Theme) (kiosk/themes/vaporwave.css)
+ * ============================================================================
+ *
+ * Design System Rules (§7):
+ *   - Theme files override ONLY CSS custom properties (colors and font stacks).
+ *   - 60/30/10 Rule:
+ *       60% deep purple page (`--vapor-deep`)
+ *       30% pastel surface cards (`--pastel-purple`, `--pastel-pink`, `--pastel-gold`)
+ *       10% gold / hot-pink / mint accents (`--school-gold`, `--hot-pink`, `--vapor-mint`)
+ *   - Contrast >= 7:1 on every surface:
+ *       - Gold, hot pink, and mint appear ONLY on the dark purple page.
+ *       - Text on pastel cards ALWAYS uses that card's dark text color.
+ */
+
+:root {
+  /* Raw palette (BeakSquad brand) */
+  --vapor-deep: #1a0030;
+  --vapor-mid: #2d0060;
+  --school-gold: #ffd700;
+  --hot-pink: #ff80d0;
+  --pastel-purple: #f5e6ff;
+  --pastel-pink: #ffe6f5;
+  --pastel-gold: #fff8e6;
+  --vapor-mint: #80ffd8;   /* NEW: one cool accent to balance all the warm colors */
+
+  /* Semantic tokens: components use ONLY these */
+  --page-bg: var(--vapor-deep);
+  --header-bg: linear-gradient(135deg, var(--vapor-deep), var(--vapor-mid));
+  --page-grid: color-mix(in srgb, var(--hot-pink) 12%, transparent); /* static retro floor grid, bottom 30% */
+  --text-on-dark: var(--pastel-purple);
+
+  --hero-bg: var(--pastel-pink);
+  --hero-border: #f060a0;
+  --hero-text: #600030;
+
+  --card-a-bg: var(--pastel-purple);
+  --card-a-border: #c060f0;
+  --card-a-text: #3a0060;
+
+  --card-b-bg: var(--pastel-gold);
+  --card-b-border: #f0c000;
+  --card-b-text: #4a3000;
+
+  --status-open: var(--vapor-mint);    /* OPEN word, on the dark page */
+  --status-closed: var(--hot-pink);    /* CLOSED word, on the dark page */
+  --accent-brand: var(--school-gold);  /* room number, clock */
+
+  --banner-text: #1a0030;
+  --qr-bg: #ffffff;
+  --qr-fg: #000000;
+
+  --font-display: "Press Start 2P";  /* status word + room number ONLY (few characters) */
+  --font-digits:  "VT323";           /* clock, times, countdown */
+  --font-body:    "Space Grotesk";   /* sentences */
+  --font-code:    "Share Tech Mono"; /* code snippets */
+}

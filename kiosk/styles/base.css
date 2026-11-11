@@ -1,0 +1,752 @@
+/**
+ * ============================================================================
+ * BEAKSQUAD HALLWAY SIGNAGE — BASE LAYOUT & TYPOGRAPHY (kiosk/styles/base.css)
+ * ============================================================================
+ *
+ * Architectural Rules (§7):
+ *   1. Layout and typography sizing ONLY.
+ *   2. NEVER put a raw hex value in this file — every color and font stack
+ *      comes from a CSS custom property (`var(--...)`) defined in `themes/*.css`.
+ *   3. Contemporary tactile "Suede-Matte" finish: flat elevated surface cards
+ *      with crisp, low-reflection borders. No glassmorphism, blur, or neon glow.
+ *   4. Monitor sizing rules (1920x1080 16:9 landscape, 3% margins):
+ *        - Status word >= 18vh
+ *        - Times & clock >= 7vh
+ *        - Body text >= 4.5vh
+ *        - Footer text >= 3vh
+ *        - QR code == 22vh
+ */
+
+/* --------------------------------------------------------------------------
+   1. SELF-HOSTED @FONT-FACE DECLARATIONS (kiosk/fonts/)
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Press Start 2P";
+  src: local("Press Start 2P"), url("../fonts/PressStart2P-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Orbitron";
+  src: local("Orbitron Bold"), local("Orbitron"), url("../fonts/Orbitron-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "VT323";
+  src: local("VT323"), url("../fonts/VT323-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: local("Space Grotesk"), url("../fonts/SpaceGrotesk-Regular.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Share Tech Mono";
+  src: local("Share Tech Mono"), url("../fonts/ShareTechMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --------------------------------------------------------------------------
+   2. KIOSK RESET & VIEWPORT LOCK (No cursor, no scrollbars, 3% margins)
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  cursor: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--page-bg);
+  color: var(--text-on-dark);
+  font-family: var(--font-body), system-ui, -apple-system, sans-serif;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Full-width offline warning banner (§5) */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: var(--status-closed);
+  color: var(--banner-text, var(--page-bg));
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: clamp(3.2vh, 2.2vw, 4vh);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 1.1vh 3vw;
+  border-bottom: 0.4vh solid var(--page-bg);
+}
+
+.kiosk-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  padding: 3vh 3vw;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.6s ease;
+}
+
+/* Static retro floor grid on the bottom 30% of the screen (§7) */
+.retro-floor-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30vh;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--page-grid) 2px, transparent 2px),
+    linear-gradient(to bottom, var(--page-grid) 2px, transparent 2px);
+  background-size: 4vw 4vh;
+}
+
+.display-mount {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Corner diagnostic dots (offline fetch dot & clock-drift dot) */
+.diagnostic-dots {
+  position: fixed;
+  right: 1.2vw;
+  bottom: 1.2vh;
+  z-index: 900;
+  display: flex;
+  gap: 0.6vw;
+  align-items: center;
+}
+
+.diag-dot {
+  width: 1.4vh;
+  height: 1.4vh;
+  border-radius: 50%;
+  display: inline-block;
+  border: 0.2vh solid var(--page-bg);
+}
+
+.diag-dot-offline {
+  background-color: var(--status-closed);
+}
+
+.diag-dot-drift {
+  background-color: var(--accent-brand);
+}
+
+/* --------------------------------------------------------------------------
+   3. SUEDE-MATTE SURFACE CARDS (Hero, Card A, Card B)
+   -------------------------------------------------------------------------- */
+.surface-card {
+  border-radius: 1.8vh;
+  border-style: solid;
+  border-width: 0.35vh;
+  padding: 2.6vh 2.4vw;
+}
+
+/* Hero Card: Status Board reason panel */
+.surface-hero {
+  background-color: var(--hero-bg);
+  border-color: var(--hero-border);
+  color: var(--hero-text);
+}
+
+/* Card A: Slides & Today's Open Windows list */
+.surface-card-a {
+  background-color: var(--card-a-bg);
+  border-color: var(--card-a-border);
+  color: var(--card-a-text);
+}
+
+/* Card B: Code / Command slides */
+.surface-card-b {
+  background-color: var(--card-b-bg);
+  border-color: var(--card-b-border);
+  color: var(--card-b-text);
+}
+
+/* --------------------------------------------------------------------------
+   4. STATUS BOARD (?display=status)
+   -------------------------------------------------------------------------- */
+.board {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.4vh;
+}
+
+.status-header,
+.info-header {
+  background: var(--header-bg);
+  border: 0.25vh solid var(--page-grid);
+  border-radius: 1.4vh;
+  padding: 1.4vh 2vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.status-brand,
+.info-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.4vw;
+}
+
+.brand-badge {
+  font-family: var(--font-digits), monospace;
+  font-size: clamp(4.5vh, 3vw, 5.5vh);
+  line-height: 1;
+  color: var(--accent-brand);
+  letter-spacing: 0.04em;
+}
+
+.brand-title {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(3.2vh, 2.1vw, 4vh);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-on-dark);
+}
+
+.status-clock-group {
+  display: flex;
+  align-items: center;
+  gap: 1.8vw;
+}
+
+.day-badge {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(3.2vh, 2vw, 3.8vh);
+  font-weight: 800;
+  padding: 0.6vh 1.4vw;
+  border-radius: 1vh;
+  background-color: var(--card-a-bg);
+  color: var(--card-a-text);
+  border: 0.25vh solid var(--card-a-border);
+  letter-spacing: 0.05em;
+}
+
+/* Live clock >= 7vh in --font-digits */
+.live-clock {
+  font-family: var(--font-digits), monospace;
+  font-size: clamp(7vh, 4.8vw, 8.2vh);
+  line-height: 0.95;
+  color: var(--accent-brand);
+  letter-spacing: 0.03em;
+}
+
+.status-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1.25fr 0.95fr;
+  gap: 2.6vw;
+  align-items: stretch;
+}
+
+.status-primary {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.4vh;
+  min-height: 0;
+}
+
+.status-word-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1vh 0.5vw;
+}
+
+/* Giant status word (OPEN or CLOSED) >= 18vh in --font-display */
+.status-word {
+  font-family: var(--font-display), monospace;
+  font-size: clamp(18vh, 10.2vw, 20vh);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--status-closed);
+}
+
+.status-word[data-state="open"] {
+  color: var(--status-open);
+}
+
+.status-word[data-state="closed"] {
+  color: var(--status-closed);
+}
+
+/* Hero reason panel */
+.status-reason-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4vh;
+  justify-content: center;
+}
+
+.reason-line {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(4.5vh, 2.6vw, 5.2vh);
+  line-height: 1.22;
+  color: var(--hero-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.reason-title {
+  font-weight: 800;
+}
+
+.reason-message {
+  font-weight: 600;
+}
+
+/* Countdown >= 7vh in --font-digits */
+.status-countdown {
+  font-family: var(--font-digits), monospace;
+  font-size: clamp(7vh, 4.4vw, 7.8vh);
+  line-height: 1;
+  color: var(--hero-text);
+  letter-spacing: 0.02em;
+}
+
+/* Today's Open Windows Card (Card A) */
+.status-windows-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1.6vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.windows-heading {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(3.2vh, 2vw, 3.8vh);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--card-a-text);
+  border-bottom: 0.25vh solid var(--card-a-border);
+  padding-bottom: 1vh;
+}
+
+.windows-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  flex: 1;
+  gap: 1vh;
+}
+
+.window-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1vh 1.4vw;
+  border-radius: 1.2vh;
+  border: 0.25vh solid transparent;
+  color: var(--card-a-text);
+}
+
+/* Highlight current open window */
+.window-item.window-current {
+  background-color: var(--card-b-bg);
+  border-color: var(--card-b-border);
+  color: var(--card-b-text);
+  font-weight: 800;
+}
+
+/* Dim past windows */
+.window-item.window-past {
+  opacity: 0.52;
+}
+
+.window-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8vw;
+}
+
+.window-period {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(4.5vh, 2.4vw, 4.8vh);
+  font-weight: 700;
+}
+
+/* Window clock times >= 7vh in --font-digits */
+.window-time {
+  font-family: var(--font-digits), monospace;
+  font-size: clamp(7vh, 4vw, 7.4vh);
+  line-height: 0.95;
+}
+
+.win-pill {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(2.4vh, 1.4vw, 2.8vh);
+  font-weight: 800;
+  padding: 0.3vh 0.7vw;
+  border-radius: 0.6vh;
+  border: 0.2vh solid currentColor;
+}
+
+.windows-empty {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(4.5vh, 2.6vw, 5vh);
+  font-weight: 600;
+  color: var(--card-a-text);
+  margin: auto 0;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   5. INFO BOARD (?display=info)
+   -------------------------------------------------------------------------- */
+.info-corner-pills {
+  display: flex;
+  align-items: center;
+  gap: 1.2vw;
+}
+
+.pin-indicator {
+  font-size: clamp(3.6vh, 2.2vw, 4.2vh);
+  line-height: 1;
+}
+
+.corner-status-pill {
+  font-family: var(--font-display), monospace;
+  font-size: clamp(3vh, 1.8vw, 3.6vh);
+  padding: 0.9vh 1.4vw;
+  border-radius: 1vh;
+  letter-spacing: 0.04em;
+  background-color: var(--page-bg);
+  border: 0.3vh solid currentColor;
+}
+
+.corner-status-pill[data-state="open"] {
+  color: var(--status-open);
+}
+
+.corner-status-pill[data-state="closed"] {
+  color: var(--status-closed);
+}
+
+.slide-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6vw;
+}
+
+.slide-dot {
+  width: 1.2vh;
+  height: 1.2vh;
+  border-radius: 50%;
+  background-color: var(--text-on-dark);
+  opacity: 0.3;
+}
+
+.slide-dot.is-active {
+  background-color: var(--accent-brand);
+  opacity: 1;
+  transform: scale(1.25);
+}
+
+/* Crossfade Stage (400ms transition) */
+.info-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.info-slide-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--crossfade-ms, 400ms) ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-slide-layer.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* HOME Page Layout: Left 1/3 visual, Right 2/3 Room Number + Tagline */
+.home-layout {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 3vw;
+  align-items: center;
+}
+
+.home-layout.no-visual {
+  grid-template-columns: 1fr;
+}
+
+.home-visual-col {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-graphic-frame {
+  width: 100%;
+  max-height: 68vh;
+  aspect-ratio: 1 / 1;
+  background-color: var(--card-a-bg);
+  border: 0.4vh solid var(--card-a-border);
+  border-radius: 2.2vh;
+  padding: 2.5vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-graphic-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.home-info-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2.4vh;
+}
+
+.home-room-label {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(3.5vh, 2.2vw, 4.2vh);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--text-on-dark);
+}
+
+/* Giant Room Number on dark background (--font-display, --accent-brand, >= 18vh) */
+.home-room-number {
+  font-family: var(--font-display), monospace;
+  font-size: clamp(18vh, 10.5vw, 21vh);
+  line-height: 1.05;
+  color: var(--accent-brand);
+}
+
+.home-tagline-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4vh;
+}
+
+.home-tagline {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(5vh, 3vw, 6vh);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.home-substatus {
+  font-family: var(--font-digits), monospace;
+  font-size: clamp(7vh, 4.2vw, 7.6vh);
+  line-height: 1;
+}
+
+/* Sheet Slide Cards (Card A for announcement/tip, Card B for command) */
+.sheet-slide-card {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.8vw;
+  align-items: center;
+  padding: 3.6vh 3.4vw;
+}
+
+.sheet-slide-card.has-qr {
+  grid-template-columns: 1fr auto;
+}
+
+.slide-main-col {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.2vh;
+  min-width: 0;
+}
+
+.slide-type-pill {
+  align-self: flex-start;
+  font-family: var(--font-code), monospace;
+  font-size: clamp(3vh, 1.8vw, 3.4vh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.6vh 1.2vw;
+  border-radius: 0.8vh;
+  border: 0.25vh solid currentColor;
+}
+
+.slide-title {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(6vh, 3.8vw, 7.4vh);
+  font-weight: 800;
+  line-height: 1.12;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Body >= 4.5vh */
+.slide-content {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(4.8vh, 2.9vw, 5.6vh);
+  font-weight: 600;
+  line-height: 1.35;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Shrink to minimum 4.5vh if content has more words, then truncate */
+.slide-content.slide-content-compact {
+  font-size: clamp(4.5vh, 2.6vw, 4.8vh);
+}
+
+.slide-inline-code {
+  font-family: var(--font-code), monospace;
+  font-size: 0.95em;
+  padding: 0.2vh 0.6vw;
+  border-radius: 0.7vh;
+  border: 0.22vh solid currentColor;
+  background-color: var(--code-surface-bg, transparent);
+}
+
+.slide-code-block {
+  font-family: var(--font-code), monospace;
+  font-size: clamp(4.5vh, 2.5vw, 4.8vh);
+  line-height: 1.25;
+  padding: 1.4vh 1.6vw;
+  margin-top: 1vh;
+  border-radius: 1.1vh;
+  border: 0.25vh solid currentColor;
+  background-color: var(--code-surface-bg, transparent);
+  max-height: 24vh;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+/* Footer >= 3vh */
+.slide-footer {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(3.2vh, 2vw, 3.8vh);
+  font-weight: 700;
+  padding-top: 1.2vh;
+  border-top: 0.25vh solid currentColor;
+}
+
+/* QR Code Column (~22vh, high-contrast black on white) */
+.slide-qr-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4vh;
+}
+
+.qr-box {
+  background-color: var(--qr-bg, white);
+  color: var(--qr-fg, black);
+  padding: 1.4vh;
+  border-radius: 1.4vh;
+  border: 0.35vh solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-image {
+  width: 22vh;
+  height: 22vh;
+  display: block;
+  object-fit: contain;
+}
+
+.qr-fallback-text {
+  width: 24vh;
+  min-height: 22vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 1vh;
+  padding: 1vh;
+}
+
+.qr-fallback-label {
+  font-family: var(--font-body), sans-serif;
+  font-size: clamp(3vh, 1.8vw, 3.2vh);
+  font-weight: 800;
+}
+
+.qr-fallback-url {
+  font-family: var(--font-code), monospace;
+  font-size: clamp(3vh, 1.8vw, 3.4vh);
+  word-break: break-all;
+}
+
+.qr-caption {
+  font-family: var(--font-code), monospace;
+  font-size: clamp(3vh, 1.7vw, 3.2vh);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
